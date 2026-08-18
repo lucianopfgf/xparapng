@@ -109,7 +109,8 @@ export function Poster({
           tweet={tweet}
           text={text}
           showStats={showStats && page === pages - 1}
-          showMedia={showMedia && page === pages - 1}
+          showMedia={showMedia && page === mediaPage}
+          verified={verified}
           theme={bg.card}
         />
       </div>

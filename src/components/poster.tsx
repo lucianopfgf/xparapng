@@ -70,6 +70,8 @@ export function Poster({
   widthPct,
   showStats,
   showMedia,
+  mediaPage,
+  verified,
   page,
   pages,
   innerRef,
@@ -80,6 +82,8 @@ export function Poster({
   widthPct: number;
   showStats: boolean;
   showMedia: boolean;
+  mediaPage: number;
+  verified?: boolean;
   page: number;
   pages: number;
   innerRef?: React.Ref<HTMLDivElement>;
@@ -105,7 +109,8 @@ export function Poster({
           tweet={tweet}
           text={text}
           showStats={showStats && page === pages - 1}
-          showMedia={showMedia && page === pages - 1}
+          showMedia={showMedia && page === mediaPage}
+          verified={verified}
           theme={bg.card}
         />
       </div>

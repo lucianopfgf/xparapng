@@ -62,8 +62,11 @@ export const fetchTweet = createServerFn({ method: "POST" })
     for (const p of t.media?.photos ?? []) media.push({ url: p.url, type: "photo" });
     for (const v of t.media?.videos ?? []) media.push({ url: v.thumbnail_url ?? v.url, type: "video" });
 
-    const [avatar, ...mediaData] = await Promise.all([
+    const rawCard = t.card?.url ? t.card : null;
+
+    const [avatar, cardImage, ...mediaData] = await Promise.all([
       toDataUrl(t.author?.avatar_url ?? "").catch(() => ""),
+      rawCard?.image?.url ? toDataUrl(rawCard.image.url).catch(() => "") : Promise.resolve(""),
       ...media.slice(0, 4).map((m) => toDataUrl(m.url).catch(() => "")),
     ]);
 
@@ -71,6 +74,16 @@ export const fetchTweet = createServerFn({ method: "POST" })
       name: t.author?.name ?? "",
       username: t.author?.screen_name ?? "",
       avatar,
+      verified: Boolean(t.author?.verification?.verified),
+      card: rawCard
+        ? {
+            url: rawCard.url ?? "",
+            title: rawCard.title ?? "",
+            description: rawCard.description ?? "",
+            domain: rawCard.domain ?? "",
+            image: cardImage ?? "",
+          }
+        : null,
       text: (t.text ?? "").replace(/https:\/\/t\.co\/\w+$/g, "").trimEnd(),
       createdAt: t.created_at ?? "",
       likes: t.likes ?? 0,

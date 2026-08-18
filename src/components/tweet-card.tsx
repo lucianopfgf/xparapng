@@ -181,6 +181,11 @@ export function TweetCard({
         </div>
       ) : null}
 
+      {showMedia && tweet.media.length === 0 && tweet.card ? (
+        <LinkCard card={tweet.card} scale={scale} border={border} sub={sub} />
+      ) : null}
+
+
       <div style={{ marginTop: 26 * scale, fontSize: 25 * scale, color: sub }}>
         {formatDate(tweet.createdAt)}
       </div>

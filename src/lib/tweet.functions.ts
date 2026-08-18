@@ -3,10 +3,19 @@ import { z } from "zod";
 
 export type TweetMedia = { url: string; type: "photo" | "video" };
 
+export type TweetCardLink = {
+  url: string;
+  title: string;
+  description: string;
+  domain: string;
+  image: string;
+};
+
 export type TweetData = {
   name: string;
   username: string;
   avatar: string;
+  verified: boolean;
   text: string;
   createdAt: string;
   likes: number;
@@ -14,6 +23,7 @@ export type TweetData = {
   replies: number;
   views: number;
   media: TweetMedia[];
+  card: TweetCardLink | null;
 };
 
 function extractId(url: string): string | null {

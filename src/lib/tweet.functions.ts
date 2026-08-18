@@ -18,7 +18,7 @@ export type TweetData = {
 
 function extractId(url: string): string | null {
   const m = url.match(/(?:twitter\.com|x\.com)\/[^/]+\/status(?:es)?\/(\d+)/i);
-  if (m) return m[1];
+  if (m?.[1]) return m[1];
   if (/^\d{5,25}$/.test(url.trim())) return url.trim();
   return null;
 }
@@ -30,7 +30,7 @@ async function toDataUrl(url: string): Promise<string> {
   const type = res.headers.get("content-type") ?? "image/jpeg";
   let binary = "";
   const bytes = new Uint8Array(buf);
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i] as number);
   return `data:${type};base64,${btoa(binary)}`;
 }
 
@@ -69,6 +69,6 @@ export const fetchTweet = createServerFn({ method: "POST" })
       views: t.views ?? 0,
       media: mediaData
         .filter(Boolean)
-        .map((url, i) => ({ url, type: media[i].type })),
+        .map((url, i) => ({ url, type: media[i]?.type ?? "photo" })),
     };
   });

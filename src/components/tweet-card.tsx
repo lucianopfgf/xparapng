@@ -1,0 +1,172 @@
+import type { TweetData } from "@/lib/tweet.functions";
+
+function formatCount(n: number) {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(".0", "")}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1).replace(".0", "")}K`;
+  return String(n);
+}
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const date = d.toLocaleDateString("pt-BR", { day: "numeric", month: "short", year: "numeric" });
+  return `${time} · ${date}`;
+}
+
+const iconProps = {
+  viewBox: "0 0 24 24",
+  fill: "currentColor",
+  "aria-hidden": true,
+} as const;
+
+function Stat({ path, value, color }: { path: string; value: string; color: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, color }}>
+      <svg {...iconProps} style={{ width: 26, height: 26 }}>
+        <path d={path} />
+      </svg>
+      <span style={{ fontSize: 24, fontWeight: 500 }}>{value}</span>
+    </div>
+  );
+}
+
+export type CardTheme = "light" | "dark";
+
+export function TweetCard({
+  tweet,
+  text,
+  showStats,
+  showMedia,
+  theme,
+  scale = 1,
+}: {
+  tweet: TweetData;
+  text: string;
+  showStats: boolean;
+  showMedia: boolean;
+  theme: CardTheme;
+  scale?: number;
+}) {
+  const dark = theme === "dark";
+  const fg = dark ? "#e7e9ea" : "#0f1419";
+  const sub = dark ? "#71767b" : "#536471";
+  const border = dark ? "#2f3336" : "#eff3f4";
+
+  return (
+    <div
+      style={{
+        background: dark ? "#000000" : "#ffffff",
+        borderRadius: 24 * scale,
+        padding: 44 * scale,
+        boxShadow: "0 40px 90px rgba(0,0,0,0.30), 0 8px 24px rgba(0,0,0,0.16)",
+        fontFamily:
+          '"Chirp", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+        color: fg,
+        width: "100%",
+        boxSizing: "border-box",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 18 * scale }}>
+        {tweet.avatar ? (
+          <img
+            src={tweet.avatar}
+            alt=""
+            style={{
+              width: 84 * scale,
+              height: 84 * scale,
+              borderRadius: "9999px",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        ) : null}
+        <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25 }}>
+          <span style={{ fontSize: 30 * scale, fontWeight: 700 }}>{tweet.name}</span>
+          <span style={{ fontSize: 27 * scale, color: sub }}>@{tweet.username}</span>
+        </div>
+        <div style={{ marginLeft: "auto", color: fg }}>
+          <svg {...iconProps} style={{ width: 40 * scale, height: 40 * scale }}>
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+          </svg>
+        </div>
+      </div>
+
+      <p
+        style={{
+          fontSize: 36 * scale,
+          lineHeight: 1.42,
+          margin: `${28 * scale}px 0 0`,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+        }}
+      >
+        {text}
+      </p>
+
+      {showMedia && tweet.media.length > 0 ? (
+        <div
+          style={{
+            marginTop: 28 * scale,
+            display: "grid",
+            gridTemplateColumns: tweet.media.length > 1 ? "1fr 1fr" : "1fr",
+            gap: 8 * scale,
+            borderRadius: 20 * scale,
+            overflow: "hidden",
+            border: `1px solid ${border}`,
+          }}
+        >
+          {tweet.media.slice(0, 4).map((m, i) => (
+            <img
+              key={i}
+              src={m.url}
+              alt=""
+              style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 620 * scale }}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      <div style={{ marginTop: 26 * scale, fontSize: 25 * scale, color: sub }}>
+        {formatDate(tweet.createdAt)}
+      </div>
+
+      {showStats ? (
+        <div
+          style={{
+            marginTop: 26 * scale,
+            paddingTop: 26 * scale,
+            borderTop: `1px solid ${border}`,
+            display: "flex",
+            alignItems: "center",
+            gap: 46 * scale,
+            transform: `scale(${scale})`,
+            transformOrigin: "left center",
+            width: `${100 / scale}%`,
+          }}
+        >
+          <Stat
+            color={sub}
+            value={formatCount(tweet.replies)}
+            path="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13z"
+          />
+          <Stat
+            color={sub}
+            value={formatCount(tweet.retweets)}
+            path="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"
+          />
+          <Stat
+            color={sub}
+            value={formatCount(tweet.likes)}
+            path="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.053-4.64 7.128-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.91-1.91z"
+          />
+          <Stat
+            color={sub}
+            value={formatCount(tweet.views)}
+            path="M8.75 21V3h2v18h-2zM18 21V8.5h2V21h-2zM4 21l.004-10h2L6 21H4zm9.248 0v-7h2v7h-2z"
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}

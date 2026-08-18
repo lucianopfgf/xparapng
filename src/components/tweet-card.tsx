@@ -133,7 +133,10 @@ export function TweetCard({
           />
         ) : null}
         <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.25 }}>
-          <span style={{ fontSize: 30 * scale, fontWeight: 700 }}>{tweet.name}</span>
+          <span style={{ fontSize: 30 * scale, fontWeight: 700, display: "flex", alignItems: "center", gap: 8 * scale }}>
+            {tweet.name}
+            {(verified ?? tweet.verified) ? <VerifiedBadge size={30 * scale} /> : null}
+          </span>
           <span style={{ fontSize: 27 * scale, color: sub }}>@{tweet.username}</span>
         </div>
         <div style={{ marginLeft: "auto", color: fg }}>

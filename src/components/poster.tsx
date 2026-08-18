@@ -70,6 +70,8 @@ export function Poster({
   widthPct,
   showStats,
   showMedia,
+  mediaPage,
+  verified,
   page,
   pages,
   innerRef,
@@ -80,6 +82,8 @@ export function Poster({
   widthPct: number;
   showStats: boolean;
   showMedia: boolean;
+  mediaPage: number;
+  verified?: boolean;
   page: number;
   pages: number;
   innerRef?: React.Ref<HTMLDivElement>;

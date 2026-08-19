@@ -71,6 +71,7 @@ export function Poster({
   showStats,
   showMedia,
   mediaPage,
+  mediaScale = 1,
   verified,
   page,
   pages,
@@ -83,6 +84,7 @@ export function Poster({
   showStats: boolean;
   showMedia: boolean;
   mediaPage: number;
+  mediaScale?: number;
   verified: boolean;
   page: number;
   pages: number;
@@ -110,10 +112,12 @@ export function Poster({
           text={text}
           showStats={showStats && page === pages - 1}
           showMedia={showMedia && page === mediaPage}
+          mediaScale={mediaScale}
           verified={verified}
           theme={bg.card}
         />
       </div>
+
       {pages > 1 ? (
         <div
           style={{

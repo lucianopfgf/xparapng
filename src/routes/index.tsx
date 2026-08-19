@@ -247,6 +247,11 @@ function Home() {
           </div>
 
           <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Largura do bloco</Label>
+              <span className="text-sm text-muted-foreground">{widthPct}%</span>
+            </div>
+            <Slider
               min={60}
               max={95}
               step={1}
@@ -256,18 +261,55 @@ function Home() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Texto por página</Label>
-              <span className="text-sm text-muted-foreground">{charLimit} car.</span>
+            <Label>Divisão do texto</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={splitMode === "paragraph" ? "default" : "outline"}
+                onClick={() => setSplitMode("paragraph")}
+              >
+                Por parágrafos
+              </Button>
+              <Button
+                type="button"
+                variant={splitMode === "chars" ? "default" : "outline"}
+                onClick={() => setSplitMode("chars")}
+              >
+                Por caracteres
+              </Button>
             </div>
-            <Slider
-              min={200}
-              max={1000}
-              step={20}
-              value={[charLimit]}
-              onValueChange={([v]) => setCharLimit(v ?? CHUNK_LIMIT)}
-            />
           </div>
+
+          {splitMode === "paragraph" ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Parágrafos por página</Label>
+                <span className="text-sm text-muted-foreground">{paraPerPage}</span>
+              </div>
+              <Slider
+                min={1}
+                max={12}
+                step={1}
+                value={[paraPerPage]}
+                onValueChange={([v]) => setParaPerPage(v ?? 4)}
+              />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Texto por página</Label>
+                <span className="text-sm text-muted-foreground">{charLimit} car.</span>
+              </div>
+              <Slider
+                min={200}
+                max={1000}
+                step={1}
+                value={[charLimit]}
+                onValueChange={([v]) => setCharLimit(v ?? CHUNK_LIMIT)}
+              />
+            </div>
+          )}
+
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">

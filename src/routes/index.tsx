@@ -320,7 +320,9 @@ function Home() {
                   showStats={showStats}
                   showMedia={showMedia}
                   mediaPage={mediaPage}
+                  mediaScale={mediaScale / 100}
                   verified={verified}
+
                   page={current}
                   pages={pages.length}
                 />

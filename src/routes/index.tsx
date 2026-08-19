@@ -63,6 +63,8 @@ function Home() {
   const [widthPct, setWidthPct] = useState(82);
   const [showStats, setShowStats] = useState(true);
   const [showMedia, setShowMedia] = useState(true);
+  const [verified, setVerified] = useState(true);
+  const [mediaPage, setMediaPage] = useState(0);
   const [page, setPage] = useState(0);
 
   const exportRef = useRef<HTMLDivElement>(null);

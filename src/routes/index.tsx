@@ -120,10 +120,11 @@ function Home() {
     await new Promise((r) => setTimeout(r, 120));
     const dataUrl = await toPng(node, {
       width: POSTER_W,
-      height: POSTER_H,
+      height: exportHeight,
       pixelRatio: 1,
       cacheBust: true,
     });
+
     const link = document.createElement("a");
     const suffix = pages.length > 1 ? `-${index + 1}` : "";
     link.download = `x-post-${tweet.username}-${Date.now()}${suffix}.png`;

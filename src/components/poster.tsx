@@ -83,6 +83,7 @@ export function Poster({
   verified,
   page,
   pages,
+  format,
   innerRef,
 }: {
   tweet: TweetData;
@@ -96,16 +97,18 @@ export function Poster({
   verified: boolean;
   page: number;
   pages: number;
+  format: PosterFormat;
   innerRef?: React.Ref<HTMLDivElement>;
 }) {
   const bg = BACKGROUNDS.find((b) => b.id === background) ?? BACKGROUNDS[0]!;
+  const height = posterHeight(format);
 
   return (
     <div
       ref={innerRef}
       style={{
         width: POSTER_W,
-        height: POSTER_H,
+        height,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

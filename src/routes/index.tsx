@@ -407,9 +407,9 @@ function Home() {
           {tweet ? (
             <div
               className="overflow-hidden rounded-2xl border border-border"
-              style={{ width: 360, height: 640 }}
+              style={{ width: previewW, height: previewH }}
             >
-              <div style={{ transform: `scale(${360 / POSTER_W})`, transformOrigin: "top left" }}>
+              <div style={{ transform: `scale(${previewW / POSTER_W})`, transformOrigin: "top left" }}>
                 <Poster
                   innerRef={exportRef}
                   tweet={tweet}
@@ -421,15 +421,19 @@ function Home() {
                   mediaPage={mediaPage}
                   mediaScale={mediaScale / 100}
                   verified={verified}
-
+                  format={format}
                   page={current}
                   pages={pages.length}
                 />
               </div>
             </div>
           ) : (
-            <div className="flex h-[640px] w-[360px] items-center justify-center rounded-2xl border border-dashed border-border text-center text-sm text-muted-foreground">
+            <div
+              className="flex items-center justify-center rounded-2xl border border-dashed border-border text-center text-sm text-muted-foreground"
+              style={{ width: previewW, height: previewH }}
+            >
               Cole o link de um post do X para ver o preview
+
             </div>
           )}
         </section>

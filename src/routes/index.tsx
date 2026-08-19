@@ -5,12 +5,13 @@ import { toPng } from "html-to-image";
 import { Loader2, Download, ImageIcon } from "lucide-react";
 
 import { fetchTweet, type TweetData } from "@/lib/tweet.functions";
-import { Poster, BACKGROUNDS, POSTER_W, POSTER_H, type BackgroundId } from "@/components/poster";
+import { Poster, BACKGROUNDS, POSTER_W, type BackgroundId, type PosterFormat } from "@/components/poster";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({

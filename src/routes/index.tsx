@@ -74,11 +74,21 @@ function Home() {
   const [verified, setVerified] = useState(true);
   const [mediaPage, setMediaPage] = useState(0);
   const [page, setPage] = useState(0);
+  const [autoFit, setAutoFit] = useState(true);
+  const [charLimit, setCharLimit] = useState(CHUNK_LIMIT);
+  const [mediaScale, setMediaScale] = useState(100);
 
   const exportRef = useRef<HTMLDivElement>(null);
 
-  const pages = useMemo(() => (tweet ? splitText(tweet.text) : []), [tweet]);
+  const hasMedia = !!tweet && (tweet.media.length > 0 || !!tweet.card);
+  const reserve = autoFit && showMedia && hasMedia ? (tweet!.media.length > 0 ? 0.45 : 0.55) : 0;
+
+  const pages = useMemo(
+    () => (tweet ? splitText(tweet.text, charLimit, reserve ? mediaPage : -1, reserve) : []),
+    [tweet, charLimit, mediaPage, reserve],
+  );
   const current = Math.min(page, Math.max(pages.length - 1, 0));
+
 
   async function handleLoad(e: React.FormEvent) {
     e.preventDefault();

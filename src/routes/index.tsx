@@ -136,7 +136,16 @@ function Home() {
       const data = await load({ data: { url } });
       setTweet(data);
       setPage(0);
-      setMediaPage(Math.max(splitText(data.text).length - 1, 0));
+      setMediaPage(
+        Math.max(
+          (splitMode === "paragraph"
+            ? splitParagraphs(data.text, paraPerPage)
+            : splitText(data.text, charLimit)
+          ).length - 1,
+          0,
+        ),
+      );
+
       setVerified(true);
     } catch (err) {
       setTweet(null);

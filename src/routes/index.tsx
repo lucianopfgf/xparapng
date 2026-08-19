@@ -59,6 +59,29 @@ function splitText(
   return chunks;
 }
 
+function splitParagraphs(
+  text: string,
+  perPage: number,
+  mediaIndex = -1,
+  mediaReserve = 0,
+): string[] {
+  const paras = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  if (paras.length === 0) return [text];
+  const pages: string[] = [];
+  let i = 0;
+  while (i < paras.length) {
+    const isMediaPage = pages.length === mediaIndex;
+    const take = Math.max(
+      1,
+      isMediaPage ? Math.floor(perPage * (1 - mediaReserve)) : perPage,
+    );
+    pages.push(paras.slice(i, i + take).join("\n\n"));
+    i += take;
+  }
+  return pages;
+}
+
+
 
 function Home() {
   const load = useServerFn(fetchTweet);
@@ -79,8 +102,12 @@ function Home() {
   const [charLimit, setCharLimit] = useState(CHUNK_LIMIT);
   const [mediaScale, setMediaScale] = useState(100);
   const [format, setFormat] = useState<PosterFormat>("story");
+  const [splitMode, setSplitMode] = useState<"paragraph" | "chars">("paragraph");
+  const [paraPerPage, setParaPerPage] = useState(4);
 
   const exportHeight = format === "feed" ? 1350 : 1920;
+  const previewW = 360;
+  const previewH = Math.round((previewW * exportHeight) / POSTER_W);
 
 
   const exportRef = useRef<HTMLDivElement>(null);
@@ -89,9 +116,15 @@ function Home() {
   const reserve = autoFit && showMedia && hasMedia ? (tweet!.media.length > 0 ? 0.45 : 0.55) : 0;
 
   const pages = useMemo(
-    () => (tweet ? splitText(tweet.text, charLimit, reserve ? mediaPage : -1, reserve) : []),
-    [tweet, charLimit, mediaPage, reserve],
+    () =>
+      tweet
+        ? splitMode === "paragraph"
+          ? splitParagraphs(tweet.text, paraPerPage, reserve ? mediaPage : -1, reserve)
+          : splitText(tweet.text, charLimit, reserve ? mediaPage : -1, reserve)
+        : [],
+    [tweet, charLimit, mediaPage, reserve, splitMode, paraPerPage],
   );
+
   const current = Math.min(page, Math.max(pages.length - 1, 0));
 
 
@@ -103,7 +136,16 @@ function Home() {
       const data = await load({ data: { url } });
       setTweet(data);
       setPage(0);
-      setMediaPage(Math.max(splitText(data.text).length - 1, 0));
+      setMediaPage(
+        Math.max(
+          (splitMode === "paragraph"
+            ? splitParagraphs(data.text, paraPerPage)
+            : splitText(data.text, charLimit)
+          ).length - 1,
+          0,
+        ),
+      );
+
       setVerified(true);
     } catch (err) {
       setTweet(null);
@@ -224,6 +266,11 @@ function Home() {
           </div>
 
           <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Largura do bloco</Label>
+              <span className="text-sm text-muted-foreground">{widthPct}%</span>
+            </div>
+            <Slider
               min={60}
               max={95}
               step={1}
@@ -233,18 +280,55 @@ function Home() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Texto por página</Label>
-              <span className="text-sm text-muted-foreground">{charLimit} car.</span>
+            <Label>Divisão do texto</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={splitMode === "paragraph" ? "default" : "outline"}
+                onClick={() => setSplitMode("paragraph")}
+              >
+                Por parágrafos
+              </Button>
+              <Button
+                type="button"
+                variant={splitMode === "chars" ? "default" : "outline"}
+                onClick={() => setSplitMode("chars")}
+              >
+                Por caracteres
+              </Button>
             </div>
-            <Slider
-              min={200}
-              max={1000}
-              step={20}
-              value={[charLimit]}
-              onValueChange={([v]) => setCharLimit(v ?? CHUNK_LIMIT)}
-            />
           </div>
+
+          {splitMode === "paragraph" ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Parágrafos por página</Label>
+                <span className="text-sm text-muted-foreground">{paraPerPage}</span>
+              </div>
+              <Slider
+                min={1}
+                max={12}
+                step={1}
+                value={[paraPerPage]}
+                onValueChange={([v]) => setParaPerPage(v ?? 4)}
+              />
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Texto por página</Label>
+                <span className="text-sm text-muted-foreground">{charLimit} car.</span>
+              </div>
+              <Slider
+                min={200}
+                max={1000}
+                step={1}
+                value={[charLimit]}
+                onValueChange={([v]) => setCharLimit(v ?? CHUNK_LIMIT)}
+              />
+            </div>
+          )}
+
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
@@ -332,9 +416,9 @@ function Home() {
           {tweet ? (
             <div
               className="overflow-hidden rounded-2xl border border-border"
-              style={{ width: 360, height: 640 }}
+              style={{ width: previewW, height: previewH }}
             >
-              <div style={{ transform: `scale(${360 / POSTER_W})`, transformOrigin: "top left" }}>
+              <div style={{ transform: `scale(${previewW / POSTER_W})`, transformOrigin: "top left" }}>
                 <Poster
                   innerRef={exportRef}
                   tweet={tweet}
@@ -346,15 +430,19 @@ function Home() {
                   mediaPage={mediaPage}
                   mediaScale={mediaScale / 100}
                   verified={verified}
-
+                  format={format}
                   page={current}
                   pages={pages.length}
                 />
               </div>
             </div>
           ) : (
-            <div className="flex h-[640px] w-[360px] items-center justify-center rounded-2xl border border-dashed border-border text-center text-sm text-muted-foreground">
+            <div
+              className="flex items-center justify-center rounded-2xl border border-dashed border-border text-center text-sm text-muted-foreground"
+              style={{ width: previewW, height: previewH }}
+            >
               Cole o link de um post do X para ver o preview
+
             </div>
           )}
         </section>

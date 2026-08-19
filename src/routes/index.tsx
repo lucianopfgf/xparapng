@@ -201,11 +201,29 @@ function Home() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Largura do bloco</Label>
-              <span className="text-sm text-muted-foreground">{widthPct}%</span>
+            <Label>Formato</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={format === "story" ? "default" : "outline"}
+                onClick={() => setFormat("story")}
+              >
+                Stories 1080×1920
+              </Button>
+              <Button
+                type="button"
+                variant={format === "feed" ? "default" : "outline"}
+                onClick={() => setFormat("feed")}
+              >
+                Feed 1080×1350
+              </Button>
             </div>
-            <Slider
+            <p className="text-xs text-muted-foreground">
+              {format === "story" ? "16:9 vertical — stories" : "4:5 vertical — feed do Instagram"}
+            </p>
+          </div>
+
+          <div className="space-y-3">
               min={60}
               max={95}
               step={1}

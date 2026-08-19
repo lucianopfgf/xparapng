@@ -61,7 +61,15 @@ export const BACKGROUNDS: {
 ];
 
 export const POSTER_W = 1080;
-export const POSTER_H = 1920;
+export const POSTER_H_STORY = 1920;
+export const POSTER_H_FEED = 1350;
+
+export type PosterFormat = "story" | "feed";
+
+export function posterHeight(format: PosterFormat): number {
+  return format === "feed" ? POSTER_H_FEED : POSTER_H_STORY;
+}
+
 
 export function Poster({
   tweet,

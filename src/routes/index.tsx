@@ -63,6 +63,8 @@ function Home() {
   const [widthPct, setWidthPct] = useState(82);
   const [showStats, setShowStats] = useState(true);
   const [showMedia, setShowMedia] = useState(true);
+  const [verified, setVerified] = useState(true);
+  const [mediaPage, setMediaPage] = useState(0);
   const [page, setPage] = useState(0);
 
   const exportRef = useRef<HTMLDivElement>(null);
@@ -78,6 +80,8 @@ function Home() {
       const data = await load({ data: { url } });
       setTweet(data);
       setPage(0);
+      setMediaPage(Math.max(splitText(data.text).length - 1, 0));
+      setVerified(true);
     } catch (err) {
       setTweet(null);
       setError(err instanceof Error ? err.message : "Falha ao carregar o post.");
@@ -192,9 +196,30 @@ function Home() {
               <Switch id="stats" checked={showStats} onCheckedChange={setShowStats} />
             </div>
             <div className="flex items-center justify-between">
-              <Label htmlFor="media">Mostrar mídia</Label>
+              <Label htmlFor="media">Mostrar mídia / prévia do link</Label>
               <Switch id="media" checked={showMedia} onCheckedChange={setShowMedia} />
             </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="verified">Selo de verificado</Label>
+              <Switch id="verified" checked={verified} onCheckedChange={setVerified} />
+            </div>
+            {showMedia && pages.length > 1 && tweet && (tweet.media.length > 0 || tweet.card) ? (
+              <div className="space-y-2">
+                <Label>Imagem na página</Label>
+                <div className="flex flex-wrap gap-2">
+                  {pages.map((_, i) => (
+                    <Button
+                      key={i}
+                      size="sm"
+                      variant={i === mediaPage ? "default" : "outline"}
+                      onClick={() => setMediaPage(i)}
+                    >
+                      {i + 1}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {pages.length > 1 ? (
@@ -243,6 +268,8 @@ function Home() {
                   widthPct={widthPct}
                   showStats={showStats}
                   showMedia={showMedia}
+                  mediaPage={mediaPage}
+                  verified={verified}
                   page={current}
                   pages={pages.length}
                 />

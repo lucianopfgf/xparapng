@@ -83,7 +83,7 @@ export function Poster({
   showStats: boolean;
   showMedia: boolean;
   mediaPage: number;
-  verified?: boolean;
+  verified: boolean;
   page: number;
   pages: number;
   innerRef?: React.Ref<HTMLDivElement>;

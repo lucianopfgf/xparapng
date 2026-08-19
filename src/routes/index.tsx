@@ -35,12 +35,19 @@ export const Route = createFileRoute("/")({
 
 const CHUNK_LIMIT = 620;
 
-function splitText(text: string, limit = CHUNK_LIMIT): string[] {
-  if (text.length <= limit) return [text];
+function splitText(
+  text: string,
+  limit = CHUNK_LIMIT,
+  mediaIndex = -1,
+  mediaReserve = 0,
+): string[] {
+  const limitFor = (i: number) =>
+    Math.max(120, Math.round(i === mediaIndex ? limit * (1 - mediaReserve) : limit));
+  if (text.length <= limitFor(0)) return [text];
   const chunks: string[] = [];
   let current = "";
   for (const word of text.split(/(\s+)/)) {
-    if ((current + word).length > limit && current.trim()) {
+    if ((current + word).length > limitFor(chunks.length) && current.trim()) {
       chunks.push(current.trim());
       current = word.trimStart();
     } else {
@@ -50,6 +57,7 @@ function splitText(text: string, limit = CHUNK_LIMIT): string[] {
   if (current.trim()) chunks.push(current.trim());
   return chunks;
 }
+
 
 function Home() {
   const load = useServerFn(fetchTweet);
@@ -66,11 +74,21 @@ function Home() {
   const [verified, setVerified] = useState(true);
   const [mediaPage, setMediaPage] = useState(0);
   const [page, setPage] = useState(0);
+  const [autoFit, setAutoFit] = useState(true);
+  const [charLimit, setCharLimit] = useState(CHUNK_LIMIT);
+  const [mediaScale, setMediaScale] = useState(100);
 
   const exportRef = useRef<HTMLDivElement>(null);
 
-  const pages = useMemo(() => (tweet ? splitText(tweet.text) : []), [tweet]);
+  const hasMedia = !!tweet && (tweet.media.length > 0 || !!tweet.card);
+  const reserve = autoFit && showMedia && hasMedia ? (tweet!.media.length > 0 ? 0.45 : 0.55) : 0;
+
+  const pages = useMemo(
+    () => (tweet ? splitText(tweet.text, charLimit, reserve ? mediaPage : -1, reserve) : []),
+    [tweet, charLimit, mediaPage, reserve],
+  );
   const current = Math.min(page, Math.max(pages.length - 1, 0));
+
 
   async function handleLoad(e: React.FormEvent) {
     e.preventDefault();
@@ -190,6 +208,34 @@ function Home() {
             />
           </div>
 
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Texto por página</Label>
+              <span className="text-sm text-muted-foreground">{charLimit} car.</span>
+            </div>
+            <Slider
+              min={200}
+              max={1000}
+              step={20}
+              value={[charLimit]}
+              onValueChange={([v]) => setCharLimit(v ?? CHUNK_LIMIT)}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Tamanho da imagem / prévia</Label>
+              <span className="text-sm text-muted-foreground">{mediaScale}%</span>
+            </div>
+            <Slider
+              min={40}
+              max={100}
+              step={5}
+              value={[mediaScale]}
+              onValueChange={([v]) => setMediaScale(v ?? 100)}
+            />
+          </div>
+
           <div className="space-y-4 rounded-xl border border-border p-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="stats">Mostrar contadores</Label>
@@ -203,6 +249,11 @@ function Home() {
               <Label htmlFor="verified">Selo de verificado</Label>
               <Switch id="verified" checked={verified} onCheckedChange={setVerified} />
             </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="autofit">Ajuste automático do texto</Label>
+              <Switch id="autofit" checked={autoFit} onCheckedChange={setAutoFit} />
+            </div>
+
             {showMedia && pages.length > 1 && tweet && (tweet.media.length > 0 || tweet.card) ? (
               <div className="space-y-2">
                 <Label>Imagem na página</Label>
@@ -269,7 +320,9 @@ function Home() {
                   showStats={showStats}
                   showMedia={showMedia}
                   mediaPage={mediaPage}
+                  mediaScale={mediaScale / 100}
                   verified={verified}
+
                   page={current}
                   pages={pages.length}
                 />

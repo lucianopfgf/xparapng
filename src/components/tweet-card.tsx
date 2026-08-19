@@ -47,11 +47,13 @@ function VerifiedBadge({ size }: { size: number }) {
 function LinkCard({
   card,
   scale,
+  mediaScale,
   border,
   sub,
 }: {
   card: NonNullable<TweetData["card"]>;
   scale: number;
+  mediaScale: number;
   border: string;
   sub: string;
 }) {
@@ -68,7 +70,7 @@ function LinkCard({
         <img
           src={card.image}
           alt=""
-          style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 560 * scale }}
+          style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 560 * scale * mediaScale }}
         />
       ) : null}
       <div style={{ padding: 24 * scale, display: "flex", flexDirection: "column", gap: 8 * scale }}>
@@ -90,6 +92,7 @@ export function TweetCard({
   verified,
   theme,
   scale = 1,
+  mediaScale = 1,
 }: {
   tweet: TweetData;
   text: string;
@@ -98,6 +101,7 @@ export function TweetCard({
   verified?: boolean;
   theme: CardTheme;
   scale?: number;
+  mediaScale?: number;
 }) {
   const dark = theme === "dark";
   const fg = dark ? "#e7e9ea" : "#0f1419";
@@ -175,14 +179,14 @@ export function TweetCard({
               key={i}
               src={m.url}
               alt=""
-              style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 620 * scale }}
+              style={{ width: "100%", display: "block", objectFit: "cover", maxHeight: 620 * scale * mediaScale }}
             />
           ))}
         </div>
       ) : null}
 
       {showMedia && tweet.media.length === 0 && tweet.card ? (
-        <LinkCard card={tweet.card} scale={scale} border={border} sub={sub} />
+        <LinkCard card={tweet.card} scale={scale} mediaScale={mediaScale} border={border} sub={sub} />
       ) : null}
 
 

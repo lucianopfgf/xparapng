@@ -208,6 +208,34 @@ function Home() {
             />
           </div>
 
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Texto por página</Label>
+              <span className="text-sm text-muted-foreground">{charLimit} car.</span>
+            </div>
+            <Slider
+              min={200}
+              max={1000}
+              step={20}
+              value={[charLimit]}
+              onValueChange={([v]) => setCharLimit(v ?? CHUNK_LIMIT)}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Tamanho da imagem / prévia</Label>
+              <span className="text-sm text-muted-foreground">{mediaScale}%</span>
+            </div>
+            <Slider
+              min={40}
+              max={100}
+              step={5}
+              value={[mediaScale]}
+              onValueChange={([v]) => setMediaScale(v ?? 100)}
+            />
+          </div>
+
           <div className="space-y-4 rounded-xl border border-border p-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="stats">Mostrar contadores</Label>
@@ -221,6 +249,11 @@ function Home() {
               <Label htmlFor="verified">Selo de verificado</Label>
               <Switch id="verified" checked={verified} onCheckedChange={setVerified} />
             </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="autofit">Ajuste automático do texto</Label>
+              <Switch id="autofit" checked={autoFit} onCheckedChange={setAutoFit} />
+            </div>
+
             {showMedia && pages.length > 1 && tweet && (tweet.media.length > 0 || tweet.card) ? (
               <div className="space-y-2">
                 <Label>Imagem na página</Label>

@@ -61,7 +61,15 @@ export const BACKGROUNDS: {
 ];
 
 export const POSTER_W = 1080;
-export const POSTER_H = 1920;
+export const POSTER_H_STORY = 1920;
+export const POSTER_H_FEED = 1350;
+
+export type PosterFormat = "story" | "feed";
+
+export function posterHeight(format: PosterFormat): number {
+  return format === "feed" ? POSTER_H_FEED : POSTER_H_STORY;
+}
+
 
 export function Poster({
   tweet,
@@ -75,6 +83,7 @@ export function Poster({
   verified,
   page,
   pages,
+  format,
   innerRef,
 }: {
   tweet: TweetData;
@@ -88,16 +97,18 @@ export function Poster({
   verified: boolean;
   page: number;
   pages: number;
+  format: PosterFormat;
   innerRef?: React.Ref<HTMLDivElement>;
 }) {
   const bg = BACKGROUNDS.find((b) => b.id === background) ?? BACKGROUNDS[0]!;
+  const height = posterHeight(format);
 
   return (
     <div
       ref={innerRef}
       style={{
         width: POSTER_W,
-        height: POSTER_H,
+        height,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

@@ -5,12 +5,13 @@ import { toPng } from "html-to-image";
 import { Loader2, Download, ImageIcon } from "lucide-react";
 
 import { fetchTweet, type TweetData } from "@/lib/tweet.functions";
-import { Poster, BACKGROUNDS, POSTER_W, POSTER_H, type BackgroundId } from "@/components/poster";
+import { Poster, BACKGROUNDS, POSTER_W, type BackgroundId, type PosterFormat } from "@/components/poster";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -77,6 +78,10 @@ function Home() {
   const [autoFit, setAutoFit] = useState(true);
   const [charLimit, setCharLimit] = useState(CHUNK_LIMIT);
   const [mediaScale, setMediaScale] = useState(100);
+  const [format, setFormat] = useState<PosterFormat>("story");
+
+  const exportHeight = format === "feed" ? 1350 : 1920;
+
 
   const exportRef = useRef<HTMLDivElement>(null);
 
@@ -115,10 +120,11 @@ function Home() {
     await new Promise((r) => setTimeout(r, 120));
     const dataUrl = await toPng(node, {
       width: POSTER_W,
-      height: POSTER_H,
+      height: exportHeight,
       pixelRatio: 1,
       cacheBust: true,
     });
+
     const link = document.createElement("a");
     const suffix = pages.length > 1 ? `-${index + 1}` : "";
     link.download = `x-post-${tweet.username}-${Date.now()}${suffix}.png`;
@@ -195,11 +201,29 @@ function Home() {
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label>Largura do bloco</Label>
-              <span className="text-sm text-muted-foreground">{widthPct}%</span>
+            <Label>Formato</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant={format === "story" ? "default" : "outline"}
+                onClick={() => setFormat("story")}
+              >
+                Stories 1080×1920
+              </Button>
+              <Button
+                type="button"
+                variant={format === "feed" ? "default" : "outline"}
+                onClick={() => setFormat("feed")}
+              >
+                Feed 1080×1350
+              </Button>
             </div>
-            <Slider
+            <p className="text-xs text-muted-foreground">
+              {format === "story" ? "16:9 vertical — stories" : "4:5 vertical — feed do Instagram"}
+            </p>
+          </div>
+
+          <div className="space-y-3">
               min={60}
               max={95}
               step={1}

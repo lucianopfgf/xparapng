@@ -35,12 +35,19 @@ export const Route = createFileRoute("/")({
 
 const CHUNK_LIMIT = 620;
 
-function splitText(text: string, limit = CHUNK_LIMIT): string[] {
-  if (text.length <= limit) return [text];
+function splitText(
+  text: string,
+  limit = CHUNK_LIMIT,
+  mediaIndex = -1,
+  mediaReserve = 0,
+): string[] {
+  const limitFor = (i: number) =>
+    Math.max(120, Math.round(i === mediaIndex ? limit * (1 - mediaReserve) : limit));
+  if (text.length <= limitFor(0)) return [text];
   const chunks: string[] = [];
   let current = "";
   for (const word of text.split(/(\s+)/)) {
-    if ((current + word).length > limit && current.trim()) {
+    if ((current + word).length > limitFor(chunks.length) && current.trim()) {
       chunks.push(current.trim());
       current = word.trimStart();
     } else {
@@ -50,6 +57,7 @@ function splitText(text: string, limit = CHUNK_LIMIT): string[] {
   if (current.trim()) chunks.push(current.trim());
   return chunks;
 }
+
 
 function Home() {
   const load = useServerFn(fetchTweet);

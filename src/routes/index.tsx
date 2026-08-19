@@ -102,8 +102,12 @@ function Home() {
   const [charLimit, setCharLimit] = useState(CHUNK_LIMIT);
   const [mediaScale, setMediaScale] = useState(100);
   const [format, setFormat] = useState<PosterFormat>("story");
+  const [splitMode, setSplitMode] = useState<"paragraph" | "chars">("paragraph");
+  const [paraPerPage, setParaPerPage] = useState(4);
 
   const exportHeight = format === "feed" ? 1350 : 1920;
+  const previewW = 360;
+  const previewH = Math.round((previewW * exportHeight) / POSTER_W);
 
 
   const exportRef = useRef<HTMLDivElement>(null);
@@ -112,9 +116,15 @@ function Home() {
   const reserve = autoFit && showMedia && hasMedia ? (tweet!.media.length > 0 ? 0.45 : 0.55) : 0;
 
   const pages = useMemo(
-    () => (tweet ? splitText(tweet.text, charLimit, reserve ? mediaPage : -1, reserve) : []),
-    [tweet, charLimit, mediaPage, reserve],
+    () =>
+      tweet
+        ? splitMode === "paragraph"
+          ? splitParagraphs(tweet.text, paraPerPage, reserve ? mediaPage : -1, reserve)
+          : splitText(tweet.text, charLimit, reserve ? mediaPage : -1, reserve)
+        : [],
+    [tweet, charLimit, mediaPage, reserve, splitMode, paraPerPage],
   );
+
   const current = Math.min(page, Math.max(pages.length - 1, 0));
 
 

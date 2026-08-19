@@ -78,6 +78,10 @@ function Home() {
   const [autoFit, setAutoFit] = useState(true);
   const [charLimit, setCharLimit] = useState(CHUNK_LIMIT);
   const [mediaScale, setMediaScale] = useState(100);
+  const [format, setFormat] = useState<PosterFormat>("story");
+
+  const exportHeight = format === "feed" ? 1350 : 1920;
+
 
   const exportRef = useRef<HTMLDivElement>(null);
 

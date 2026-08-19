@@ -59,6 +59,29 @@ function splitText(
   return chunks;
 }
 
+function splitParagraphs(
+  text: string,
+  perPage: number,
+  mediaIndex = -1,
+  mediaReserve = 0,
+): string[] {
+  const paras = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  if (paras.length === 0) return [text];
+  const pages: string[] = [];
+  let i = 0;
+  while (i < paras.length) {
+    const isMediaPage = pages.length === mediaIndex;
+    const take = Math.max(
+      1,
+      isMediaPage ? Math.floor(perPage * (1 - mediaReserve)) : perPage,
+    );
+    pages.push(paras.slice(i, i + take).join("\n\n"));
+    i += take;
+  }
+  return pages;
+}
+
+
 
 function Home() {
   const load = useServerFn(fetchTweet);

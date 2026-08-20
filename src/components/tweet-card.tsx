@@ -146,6 +146,9 @@ export function TweetCard({
   theme,
   scale = 1,
   mediaScale = 1,
+  editable,
+  onTextChange,
+  onSplitAt,
 }: {
   tweet: TweetData;
   text: string;
@@ -155,7 +158,11 @@ export function TweetCard({
   theme: CardTheme;
   scale?: number;
   mediaScale?: number;
+  editable?: boolean;
+  onTextChange?: (t: string) => void;
+  onSplitAt?: (caret: number) => void;
 }) {
+
   const dark = theme === "dark";
   const fg = dark ? "#e7e9ea" : "#0f1419";
   const sub = dark ? "#71767b" : "#536471";

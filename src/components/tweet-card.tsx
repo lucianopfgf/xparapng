@@ -15,10 +15,15 @@ function EditableText({
   onSplitAt?: ((caret: number) => void) | undefined;
 }) {
   const ref = useRef<HTMLParagraphElement>(null);
+  const lastEmitted = useRef<string | null>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (el && el.innerText !== text) el.innerText = text;
+    if (!el) return;
+    // Skip DOM rewrite when the change came from the user's own typing —
+    // rewriting innerText would collapse the caret to the start.
+    if (lastEmitted.current === text) return;
+    if (el.innerText !== text) el.innerText = text;
   }, [text]);
 
   function caretOffset(el: HTMLElement) {
@@ -44,12 +49,18 @@ function EditableText({
           onSplitAt?.(caretOffset(e.currentTarget));
         }
       }}
-      onInput={(e) => onTextChange?.((e.currentTarget as HTMLElement).innerText)}
+      onInput={(e) => {
+        const value = (e.currentTarget as HTMLElement).innerText;
+        lastEmitted.current = value;
+        onTextChange?.(value);
+      }}
+      onBlur={() => {
+        lastEmitted.current = null;
+      }}
       style={{ ...style, outline: "none" }}
-    >
-      {text}
-    </p>
+    />
   );
+
 }
 
 

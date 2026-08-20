@@ -1,4 +1,57 @@
+import { useEffect, useRef } from "react";
 import type { TweetData } from "@/lib/tweet.functions";
+
+function EditableText({
+  text,
+  style,
+  editable,
+  onTextChange,
+  onSplitAt,
+}: {
+  text: string;
+  style: React.CSSProperties;
+  editable?: boolean;
+  onTextChange?: (t: string) => void;
+  onSplitAt?: (caret: number) => void;
+}) {
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el && el.innerText !== text) el.innerText = text;
+  }, [text]);
+
+  function caretOffset(el: HTMLElement) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return el.innerText.length;
+    const range = sel.getRangeAt(0).cloneRange();
+    const pre = range.cloneRange();
+    pre.selectNodeContents(el);
+    pre.setEnd(range.endContainer, range.endOffset);
+    return pre.toString().length;
+  }
+
+  return (
+    <p
+      ref={ref}
+      contentEditable={editable ? true : undefined}
+      suppressContentEditableWarning
+      spellCheck={false}
+      onKeyDown={(e) => {
+        if (!editable) return;
+        if (e.key === "Enter" && e.shiftKey) {
+          e.preventDefault();
+          onSplitAt?.(caretOffset(e.currentTarget));
+        }
+      }}
+      onInput={(e) => onTextChange?.((e.currentTarget as HTMLElement).innerText)}
+      style={{ ...style, outline: "none" }}
+    >
+      {text}
+    </p>
+  );
+}
+
 
 function formatCount(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(".0", "")}M`;

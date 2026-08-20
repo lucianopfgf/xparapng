@@ -10,9 +10,9 @@ function EditableText({
 }: {
   text: string;
   style: React.CSSProperties;
-  editable?: boolean;
-  onTextChange?: (t: string) => void;
-  onSplitAt?: (caret: number) => void;
+  editable?: boolean | undefined;
+  onTextChange?: ((t: string) => void) | undefined;
+  onSplitAt?: ((caret: number) => void) | undefined;
 }) {
   const ref = useRef<HTMLParagraphElement>(null);
 
@@ -158,9 +158,9 @@ export function TweetCard({
   theme: CardTheme;
   scale?: number;
   mediaScale?: number;
-  editable?: boolean;
-  onTextChange?: (t: string) => void;
-  onSplitAt?: (caret: number) => void;
+  editable?: boolean | undefined;
+  onTextChange?: ((t: string) => void) | undefined;
+  onSplitAt?: ((caret: number) => void) | undefined;
 }) {
 
   const dark = theme === "dark";

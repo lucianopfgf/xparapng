@@ -85,6 +85,9 @@ export function Poster({
   pages,
   format,
   innerRef,
+  editable,
+  onTextChange,
+  onSplitAt,
 }: {
   tweet: TweetData;
   text: string;
@@ -99,6 +102,9 @@ export function Poster({
   pages: number;
   format: PosterFormat;
   innerRef?: React.Ref<HTMLDivElement>;
+  editable?: boolean | undefined;
+  onTextChange?: ((t: string) => void) | undefined;
+  onSplitAt?: ((caret: number) => void) | undefined;
 }) {
   const bg = BACKGROUNDS.find((b) => b.id === background) ?? BACKGROUNDS[0]!;
   const height = posterHeight(format);
@@ -126,6 +132,9 @@ export function Poster({
           mediaScale={mediaScale}
           verified={verified}
           theme={bg.card}
+          editable={editable}
+          onTextChange={onTextChange}
+          onSplitAt={onSplitAt}
         />
       </div>
 

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { Loader2, Download, ImageIcon } from "lucide-react";
 
@@ -192,21 +192,27 @@ function Home() {
     setPages((p) => resizePage(p, current, target, splitMode));
   }
 
-  function handleTextChange(text: string) {
-    setPages((p) => p.map((x, i) => (i === current ? text : x)));
-  }
+  const handleTextChange = useCallback(
+    (text: string) => {
+      setPages((p) => (p[current] === text ? p : p.map((x, i) => (i === current ? text : x))));
+    },
+    [current],
+  );
 
-  function handleSplitAt(caret: number) {
-    setPages((p) => {
-      const text = p[current] ?? "";
-      const before = text.slice(0, caret).trimEnd();
-      const after = text.slice(caret).trimStart();
-      const next = [...p];
-      next[current] = before;
-      next.splice(current + 1, 0, after);
-      return next;
-    });
-  }
+  const handleSplitAt = useCallback(
+    (caret: number) => {
+      setPages((p) => {
+        const text = p[current] ?? "";
+        const before = text.slice(0, caret).trimEnd();
+        const after = text.slice(caret).trimStart();
+        const next = [...p];
+        next[current] = before;
+        next.splice(current + 1, 0, after);
+        return next;
+      });
+    },
+    [current],
+  );
 
 
   async function handleLoad(e: React.FormEvent) {

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { Loader2, Download, ImageIcon } from "lucide-react";
 
@@ -82,6 +82,54 @@ function splitParagraphs(
 }
 
 
+type SplitMode = "paragraph" | "chars";
+
+function unitsOf(text: string, mode: SplitMode): string[] {
+  if (mode === "paragraph") {
+    return text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  }
+  return text.match(/\S+\s*/g) ?? [];
+}
+
+function joinUnits(units: string[], mode: SplitMode): string {
+  return mode === "paragraph" ? units.join("\n\n") : units.join("").trim();
+}
+
+function resizePage(pages: string[], index: number, target: number, mode: SplitMode): string[] {
+  const next = [...pages];
+  const combined = [
+    ...unitsOf(next[index] ?? "", mode),
+    ...(index + 1 < next.length ? unitsOf(next[index + 1] ?? "", mode) : []),
+  ];
+  if (combined.length === 0) return pages;
+
+  let count: number;
+  if (mode === "paragraph") {
+    count = Math.max(1, Math.min(target, combined.length));
+  } else {
+    let len = 0;
+    count = 0;
+    for (const token of combined) {
+      const add = token.length;
+      if (count > 0 && len + add > target) break;
+      len += add;
+      count++;
+    }
+    count = Math.max(1, count);
+  }
+
+  const head = combined.slice(0, count);
+  const rest = combined.slice(count);
+  next[index] = joinUnits(head, mode);
+  if (rest.length) {
+    const restText = joinUnits(rest, mode);
+    if (index + 1 < next.length) next[index + 1] = restText;
+    else next.splice(index + 1, 0, restText);
+  } else if (index + 1 < next.length) {
+    next.splice(index + 1, 1);
+  }
+  return next;
+}
 
 function Home() {
   const load = useServerFn(fetchTweet);
@@ -115,17 +163,50 @@ function Home() {
   const hasMedia = !!tweet && (tweet.media.length > 0 || !!tweet.card);
   const reserve = autoFit && showMedia && hasMedia ? (tweet!.media.length > 0 ? 0.45 : 0.55) : 0;
 
-  const pages = useMemo(
-    () =>
-      tweet
-        ? splitMode === "paragraph"
-          ? splitParagraphs(tweet.text, paraPerPage, reserve ? mediaPage : -1, reserve)
-          : splitText(tweet.text, charLimit, reserve ? mediaPage : -1, reserve)
-        : [],
-    [tweet, charLimit, mediaPage, reserve, splitMode, paraPerPage],
-  );
+  const [pages, setPages] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!tweet) {
+      setPages([]);
+      return;
+    }
+    setPages(
+      splitMode === "paragraph"
+        ? splitParagraphs(tweet.text, paraPerPage, reserve ? mediaPage : -1, reserve)
+        : splitText(tweet.text, charLimit, reserve ? mediaPage : -1, reserve),
+    );
+  }, [tweet, charLimit, mediaPage, reserve, splitMode, paraPerPage]);
 
   const current = Math.min(page, Math.max(pages.length - 1, 0));
+  const currentText = pages[current] ?? "";
+  const nextText = pages[current + 1] ?? "";
+
+  const pageValue =
+    splitMode === "paragraph" ? unitsOf(currentText, "paragraph").length : currentText.length;
+  const pageMax =
+    splitMode === "paragraph"
+      ? Math.max(1, pageValue + unitsOf(nextText, "paragraph").length)
+      : Math.max(40, currentText.length + nextText.length);
+
+  function handlePageResize(target: number) {
+    setPages((p) => resizePage(p, current, target, splitMode));
+  }
+
+  function handleTextChange(text: string) {
+    setPages((p) => p.map((x, i) => (i === current ? text : x)));
+  }
+
+  function handleSplitAt(caret: number) {
+    setPages((p) => {
+      const text = p[current] ?? "";
+      const before = text.slice(0, caret).trimEnd();
+      const after = text.slice(caret).trimStart();
+      const next = [...p];
+      next[current] = before;
+      next.splice(current + 1, 0, after);
+      return next;
+    });
+  }
 
 
   async function handleLoad(e: React.FormEvent) {
@@ -330,6 +411,30 @@ function Home() {
           )}
 
 
+          {pages.length > 0 ? (
+            <div className="space-y-3 rounded-xl border border-border p-4">
+              <div className="flex items-center justify-between">
+                <Label>
+                  Ajuste da página {current + 1}
+                </Label>
+                <span className="text-sm text-muted-foreground">
+                  {splitMode === "paragraph" ? `${pageValue} parág.` : `${pageValue} car.`}
+                </span>
+              </div>
+              <Slider
+                min={1}
+                max={pageMax}
+                step={1}
+                value={[Math.min(pageValue, pageMax)]}
+                onValueChange={([v]) => handlePageResize(v ?? pageValue)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Reduzir empurra o final desta página para a próxima; aumentar puxa da próxima. As
+                outras páginas não são afetadas.
+              </p>
+            </div>
+          ) : null}
+
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Tamanho da imagem / prévia</Label>
@@ -433,6 +538,9 @@ function Home() {
                   format={format}
                   page={current}
                   pages={pages.length}
+                  editable
+                  onTextChange={handleTextChange}
+                  onSplitAt={handleSplitAt}
                 />
               </div>
             </div>

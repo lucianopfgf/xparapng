@@ -1,4 +1,57 @@
+import { useEffect, useRef } from "react";
 import type { TweetData } from "@/lib/tweet.functions";
+
+function EditableText({
+  text,
+  style,
+  editable,
+  onTextChange,
+  onSplitAt,
+}: {
+  text: string;
+  style: React.CSSProperties;
+  editable?: boolean | undefined;
+  onTextChange?: ((t: string) => void) | undefined;
+  onSplitAt?: ((caret: number) => void) | undefined;
+}) {
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (el && el.innerText !== text) el.innerText = text;
+  }, [text]);
+
+  function caretOffset(el: HTMLElement) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return el.innerText.length;
+    const range = sel.getRangeAt(0).cloneRange();
+    const pre = range.cloneRange();
+    pre.selectNodeContents(el);
+    pre.setEnd(range.endContainer, range.endOffset);
+    return pre.toString().length;
+  }
+
+  return (
+    <p
+      ref={ref}
+      contentEditable={editable ? true : undefined}
+      suppressContentEditableWarning
+      spellCheck={false}
+      onKeyDown={(e) => {
+        if (!editable) return;
+        if (e.key === "Enter" && e.shiftKey) {
+          e.preventDefault();
+          onSplitAt?.(caretOffset(e.currentTarget));
+        }
+      }}
+      onInput={(e) => onTextChange?.((e.currentTarget as HTMLElement).innerText)}
+      style={{ ...style, outline: "none" }}
+    >
+      {text}
+    </p>
+  );
+}
+
 
 function formatCount(n: number) {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1).replace(".0", "")}M`;
@@ -93,6 +146,9 @@ export function TweetCard({
   theme,
   scale = 1,
   mediaScale = 1,
+  editable,
+  onTextChange,
+  onSplitAt,
 }: {
   tweet: TweetData;
   text: string;
@@ -102,7 +158,11 @@ export function TweetCard({
   theme: CardTheme;
   scale?: number;
   mediaScale?: number;
+  editable?: boolean | undefined;
+  onTextChange?: ((t: string) => void) | undefined;
+  onSplitAt?: ((caret: number) => void) | undefined;
 }) {
+
   const dark = theme === "dark";
   const fg = dark ? "#e7e9ea" : "#0f1419";
   const sub = dark ? "#71767b" : "#536471";
@@ -150,7 +210,11 @@ export function TweetCard({
         </div>
       </div>
 
-      <p
+      <EditableText
+        text={text}
+        editable={editable}
+        onTextChange={onTextChange}
+        onSplitAt={onSplitAt}
         style={{
           fontSize: 36 * scale,
           lineHeight: 1.42,
@@ -158,9 +222,8 @@ export function TweetCard({
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
         }}
-      >
-        {text}
-      </p>
+      />
+
 
       {showMedia && tweet.media.length > 0 ? (
         <div

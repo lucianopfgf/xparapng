@@ -210,7 +210,11 @@ export function TweetCard({
         </div>
       </div>
 
-      <p
+      <EditableText
+        text={text}
+        editable={editable}
+        onTextChange={onTextChange}
+        onSplitAt={onSplitAt}
         style={{
           fontSize: 36 * scale,
           lineHeight: 1.42,
@@ -218,9 +222,8 @@ export function TweetCard({
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
         }}
-      >
-        {text}
-      </p>
+      />
+
 
       {showMedia && tweet.media.length > 0 ? (
         <div

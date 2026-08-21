@@ -219,8 +219,19 @@ function Home() {
       : Math.max(40, currentText.length + nextText.length);
 
   function handlePageResize(target: number) {
-    setPages((p) => resizePage(p, current, target, splitMode));
+    setPages((p) => resizePage(p, current, target, splitMode, paraPerPage));
   }
+
+  /** Aplica negrito/itálico à seleção atual dentro do texto editável da prévia. */
+  function applyFormat(cmd: "bold" | "italic") {
+    const el = document.querySelector<HTMLElement>("[data-editable-text]");
+    if (!el) return;
+    el.focus();
+    document.execCommand(cmd);
+    // Faz o EditableText re-serializar o conteúdo para markdown.
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
 
   const handleTextChange = useCallback(
     (text: string) => {

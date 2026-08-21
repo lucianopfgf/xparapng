@@ -1,6 +1,45 @@
 import { useEffect, useRef } from "react";
 import type { TweetData } from "@/lib/tweet.functions";
 
+/**
+ * Markdown mínimo (**negrito** / *itálico*) -> HTML seguro.
+ * O texto é escapado ANTES de qualquer conversão, então nunca há risco de XSS.
+ */
+export function mdToHtml(text: string): string {
+  const esc = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return esc
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+}
+
+/** Serializa o DOM editável de volta para markdown (**/ *). */
+function htmlToMd(root: HTMLElement): string {
+  let out = "";
+  const walk = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      out += node.nodeValue ?? "";
+      return;
+    }
+    if (!(node instanceof HTMLElement)) return;
+    const tag = node.tagName.toLowerCase();
+    if (tag === "br") {
+      out += "\n";
+      return;
+    }
+    const wrap = tag === "strong" || tag === "b" ? "**" : tag === "em" || tag === "i" ? "*" : "";
+    const block = tag === "div" || tag === "p";
+    if (block && out && !out.endsWith("\n")) out += "\n";
+    out += wrap;
+    node.childNodes.forEach(walk);
+    out += wrap;
+  };
+  root.childNodes.forEach(walk);
+  return out;
+}
+
 function EditableText({
   text,
   style,
@@ -21,9 +60,10 @@ function EditableText({
     const el = ref.current;
     if (!el) return;
     // Skip DOM rewrite when the change came from the user's own typing —
-    // rewriting innerText would collapse the caret to the start.
+    // rewriting the content would collapse the caret to the start.
     if (lastEmitted.current === text) return;
-    if (el.innerText !== text) el.innerText = text;
+    const html = mdToHtml(text);
+    if (el.innerHTML !== html) el.innerHTML = html;
   }, [text]);
 
   function caretOffset(el: HTMLElement) {
@@ -39,6 +79,7 @@ function EditableText({
   return (
     <p
       ref={ref}
+      data-editable-text={editable ? "true" : undefined}
       contentEditable={editable ? true : undefined}
       suppressContentEditableWarning
       spellCheck={false}
@@ -50,7 +91,7 @@ function EditableText({
         }
       }}
       onInput={(e) => {
-        const value = (e.currentTarget as HTMLElement).innerText;
+        const value = htmlToMd(e.currentTarget as HTMLElement);
         lastEmitted.current = value;
         onTextChange?.(value);
       }}
@@ -62,6 +103,7 @@ function EditableText({
   );
 
 }
+
 
 
 function formatCount(n: number) {

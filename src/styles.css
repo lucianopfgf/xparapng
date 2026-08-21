@@ -142,3 +142,10 @@
     color: var(--color-foreground);
   }
 }
+
+/* Prévia dos slides acompanha o scroll da página */
+.preview-sticky {
+  position: sticky;
+  top: 1rem;
+  z-index: 10;
+}

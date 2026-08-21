@@ -146,6 +146,14 @@
 /* Prévia dos slides acompanha o scroll da página */
 .preview-sticky {
   position: sticky;
-  top: 1rem;
+  top: 1.5rem;
   z-index: 10;
+  align-self: flex-start;
+  /* movimento suave ao acompanhar o scroll */
+  transition: transform 0.25s ease-out;
+  will-change: transform;
+}
+
+html {
+  scroll-behavior: smooth;
 }

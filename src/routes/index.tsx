@@ -564,9 +564,9 @@ function Home() {
           </div>
         </section>
 
-        <section className="flex justify-center">
+        <section className="flex items-start justify-center">
           {/* Prévia sticky: acompanha o scroll da página */}
-          <div className="preview-sticky flex flex-col items-center gap-3">
+          <div className="preview-sticky flex flex-col items-center gap-3 self-start">
             {tweet ? (
               <div className="flex gap-2">
                 <Button type="button" size="sm" variant="outline" onClick={() => applyFormat("bold")}>

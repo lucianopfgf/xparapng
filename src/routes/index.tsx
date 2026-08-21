@@ -95,7 +95,18 @@ function joinUnits(units: string[], mode: SplitMode): string {
   return mode === "paragraph" ? units.join("\n\n") : units.join("").trim();
 }
 
-function resizePage(pages: string[], index: number, target: number, mode: SplitMode): string[] {
+/**
+ * Move texto entre a página `index` e a seguinte.
+ * Em modo parágrafo, o excedente é redistribuído em cascata respeitando o
+ * padrão `perPage` — criando novos slides em vez de inflar o slide seguinte.
+ */
+function resizePage(
+  pages: string[],
+  index: number,
+  target: number,
+  mode: SplitMode,
+  perPage: number,
+): string[] {
   const next = [...pages];
   const combined = [
     ...unitsOf(next[index] ?? "", mode),
@@ -128,8 +139,27 @@ function resizePage(pages: string[], index: number, target: number, mode: SplitM
   } else if (index + 1 < next.length) {
     next.splice(index + 1, 1);
   }
+
+  // Cascata: nenhum slide seguinte pode ultrapassar o padrão de parágrafos.
+  if (mode === "paragraph") {
+    for (let i = index + 1; i < next.length; i++) {
+      const units = unitsOf(next[i] ?? "", "paragraph");
+      if (units.length <= perPage) continue;
+      next[i] = joinUnits(units.slice(0, perPage), "paragraph");
+      const overflow = units.slice(perPage);
+      if (i + 1 < next.length) {
+        next[i + 1] = joinUnits(
+          [...overflow, ...unitsOf(next[i + 1] ?? "", "paragraph")],
+          "paragraph",
+        );
+      } else {
+        next.push(joinUnits(overflow, "paragraph"));
+      }
+    }
+  }
   return next;
 }
+
 
 function Home() {
   const load = useServerFn(fetchTweet);

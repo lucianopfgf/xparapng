@@ -565,42 +565,58 @@ function Home() {
         </section>
 
         <section className="flex justify-center">
-          {tweet ? (
-            <div
-              className="overflow-hidden rounded-2xl border border-border"
-              style={{ width: previewW, height: previewH }}
-            >
-              <div style={{ transform: `scale(${previewW / POSTER_W})`, transformOrigin: "top left" }}>
-                <Poster
-                  innerRef={exportRef}
-                  tweet={tweet}
-                  text={pages[current] ?? ""}
-                  background={background}
-                  widthPct={widthPct}
-                  showStats={showStats}
-                  showMedia={showMedia}
-                  mediaPage={mediaPage}
-                  mediaScale={mediaScale / 100}
-                  verified={verified}
-                  format={format}
-                  page={current}
-                  pages={pages.length}
-                  editable
-                  onTextChange={handleTextChange}
-                  onSplitAt={handleSplitAt}
-                />
+          {/* Prévia sticky: acompanha o scroll da página */}
+          <div className="preview-sticky flex flex-col items-center gap-3">
+            {tweet ? (
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => applyFormat("bold")}>
+                  <Bold className="size-4" />
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => applyFormat("italic")}>
+                  <Italic className="size-4" />
+                </Button>
+                <span className="self-center text-xs text-muted-foreground">
+                  Selecione o texto na prévia
+                </span>
               </div>
-            </div>
-          ) : (
-            <div
-              className="flex items-center justify-center rounded-2xl border border-dashed border-border text-center text-sm text-muted-foreground"
-              style={{ width: previewW, height: previewH }}
-            >
-              Cole o link de um post do X para ver o preview
-
-            </div>
-          )}
+            ) : null}
+            {tweet ? (
+              <div
+                className="overflow-hidden rounded-2xl border border-border"
+                style={{ width: previewW, height: previewH }}
+              >
+                <div style={{ transform: `scale(${previewW / POSTER_W})`, transformOrigin: "top left" }}>
+                  <Poster
+                    innerRef={exportRef}
+                    tweet={tweet}
+                    text={pages[current] ?? ""}
+                    background={background}
+                    widthPct={widthPct}
+                    showStats={showStats}
+                    showMedia={showMedia}
+                    mediaPage={mediaPage}
+                    mediaScale={mediaScale / 100}
+                    verified={verified}
+                    format={format}
+                    page={current}
+                    pages={pages.length}
+                    editable
+                    onTextChange={handleTextChange}
+                    onSplitAt={handleSplitAt}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div
+                className="flex items-center justify-center rounded-2xl border border-dashed border-border text-center text-sm text-muted-foreground"
+                style={{ width: previewW, height: previewH }}
+              >
+                Cole o link de um post do X para ver o preview
+              </div>
+            )}
+          </div>
         </section>
+
       </div>
     </main>
   );

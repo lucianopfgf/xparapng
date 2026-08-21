@@ -15,7 +15,7 @@ export function mdToHtml(text: string): string {
     .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
 }
 
-/** Serializa o DOM editável de volta para markdown (**/ *). */
+/** Serializa o DOM editavel de volta para markdown (negrito/italico). */
 function htmlToMd(root: HTMLElement): string {
   let out = "";
   const walk = (node: Node) => {

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { Loader2, Download, ImageIcon } from "lucide-react";
+import { Loader2, Download, ImageIcon, Bold, Italic } from "lucide-react";
 
 import { fetchTweet, type TweetData } from "@/lib/tweet.functions";
 import { Poster, BACKGROUNDS, POSTER_W, type BackgroundId, type PosterFormat } from "@/components/poster";

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { Loader2, Download, ImageIcon } from "lucide-react";
+import { Loader2, Download, ImageIcon, Bold, Italic } from "lucide-react";
 
 import { fetchTweet, type TweetData } from "@/lib/tweet.functions";
 import { Poster, BACKGROUNDS, POSTER_W, type BackgroundId, type PosterFormat } from "@/components/poster";
@@ -95,7 +95,18 @@ function joinUnits(units: string[], mode: SplitMode): string {
   return mode === "paragraph" ? units.join("\n\n") : units.join("").trim();
 }
 
-function resizePage(pages: string[], index: number, target: number, mode: SplitMode): string[] {
+/**
+ * Move texto entre a página `index` e a seguinte.
+ * Em modo parágrafo, o excedente é redistribuído em cascata respeitando o
+ * padrão `perPage` — criando novos slides em vez de inflar o slide seguinte.
+ */
+function resizePage(
+  pages: string[],
+  index: number,
+  target: number,
+  mode: SplitMode,
+  perPage: number,
+): string[] {
   const next = [...pages];
   const combined = [
     ...unitsOf(next[index] ?? "", mode),
@@ -128,8 +139,27 @@ function resizePage(pages: string[], index: number, target: number, mode: SplitM
   } else if (index + 1 < next.length) {
     next.splice(index + 1, 1);
   }
+
+  // Cascata: nenhum slide seguinte pode ultrapassar o padrão de parágrafos.
+  if (mode === "paragraph") {
+    for (let i = index + 1; i < next.length; i++) {
+      const units = unitsOf(next[i] ?? "", "paragraph");
+      if (units.length <= perPage) continue;
+      next[i] = joinUnits(units.slice(0, perPage), "paragraph");
+      const overflow = units.slice(perPage);
+      if (i + 1 < next.length) {
+        next[i + 1] = joinUnits(
+          [...overflow, ...unitsOf(next[i + 1] ?? "", "paragraph")],
+          "paragraph",
+        );
+      } else {
+        next.push(joinUnits(overflow, "paragraph"));
+      }
+    }
+  }
   return next;
 }
+
 
 function Home() {
   const load = useServerFn(fetchTweet);
@@ -189,8 +219,19 @@ function Home() {
       : Math.max(40, currentText.length + nextText.length);
 
   function handlePageResize(target: number) {
-    setPages((p) => resizePage(p, current, target, splitMode));
+    setPages((p) => resizePage(p, current, target, splitMode, paraPerPage));
   }
+
+  /** Aplica negrito/itálico à seleção atual dentro do texto editável da prévia. */
+  function applyFormat(cmd: "bold" | "italic") {
+    const el = document.querySelector<HTMLElement>("[data-editable-text]");
+    if (!el) return;
+    el.focus();
+    document.execCommand(cmd);
+    // Faz o EditableText re-serializar o conteúdo para markdown.
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
 
   const handleTextChange = useCallback(
     (text: string) => {
@@ -524,42 +565,58 @@ function Home() {
         </section>
 
         <section className="flex justify-center">
-          {tweet ? (
-            <div
-              className="overflow-hidden rounded-2xl border border-border"
-              style={{ width: previewW, height: previewH }}
-            >
-              <div style={{ transform: `scale(${previewW / POSTER_W})`, transformOrigin: "top left" }}>
-                <Poster
-                  innerRef={exportRef}
-                  tweet={tweet}
-                  text={pages[current] ?? ""}
-                  background={background}
-                  widthPct={widthPct}
-                  showStats={showStats}
-                  showMedia={showMedia}
-                  mediaPage={mediaPage}
-                  mediaScale={mediaScale / 100}
-                  verified={verified}
-                  format={format}
-                  page={current}
-                  pages={pages.length}
-                  editable
-                  onTextChange={handleTextChange}
-                  onSplitAt={handleSplitAt}
-                />
+          {/* Prévia sticky: acompanha o scroll da página */}
+          <div className="preview-sticky flex flex-col items-center gap-3">
+            {tweet ? (
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => applyFormat("bold")}>
+                  <Bold className="size-4" />
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={() => applyFormat("italic")}>
+                  <Italic className="size-4" />
+                </Button>
+                <span className="self-center text-xs text-muted-foreground">
+                  Selecione o texto na prévia
+                </span>
               </div>
-            </div>
-          ) : (
-            <div
-              className="flex items-center justify-center rounded-2xl border border-dashed border-border text-center text-sm text-muted-foreground"
-              style={{ width: previewW, height: previewH }}
-            >
-              Cole o link de um post do X para ver o preview
-
-            </div>
-          )}
+            ) : null}
+            {tweet ? (
+              <div
+                className="overflow-hidden rounded-2xl border border-border"
+                style={{ width: previewW, height: previewH }}
+              >
+                <div style={{ transform: `scale(${previewW / POSTER_W})`, transformOrigin: "top left" }}>
+                  <Poster
+                    innerRef={exportRef}
+                    tweet={tweet}
+                    text={pages[current] ?? ""}
+                    background={background}
+                    widthPct={widthPct}
+                    showStats={showStats}
+                    showMedia={showMedia}
+                    mediaPage={mediaPage}
+                    mediaScale={mediaScale / 100}
+                    verified={verified}
+                    format={format}
+                    page={current}
+                    pages={pages.length}
+                    editable
+                    onTextChange={handleTextChange}
+                    onSplitAt={handleSplitAt}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div
+                className="flex items-center justify-center rounded-2xl border border-dashed border-border text-center text-sm text-muted-foreground"
+                style={{ width: previewW, height: previewH }}
+              >
+                Cole o link de um post do X para ver o preview
+              </div>
+            )}
+          </div>
         </section>
+
       </div>
     </main>
   );

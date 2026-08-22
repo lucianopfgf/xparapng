@@ -283,40 +283,94 @@ function Home() {
     }
   }
 
-  async function exportPage(index: number) {
-    const node = exportRef.current;
-    if (!node || !tweet) return;
-    setPage(index);
-    await new Promise((r) => setTimeout(r, 120));
-    const dataUrl = await toPng(node, {
-      width: POSTER_W,
-      height: exportHeight,
-      pixelRatio: 1,
-      cacheBust: true,
-    });
+  function dataUrlToBlob(dataUrl: string): Blob {
+    const [head, b64] = dataUrl.split(",");
+    const mime = /:(.*?);/.exec(head ?? "")?.[1] ?? "image/png";
+    const bin = atob(b64 ?? "");
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
 
-    const link = document.createElement("a");
+  async function renderPage(index: number): Promise<File | null> {
+    const node = exportRef.current;
+    if (!node || !tweet) return null;
+    setPage(index);
+    await new Promise((r) => setTimeout(r, 180));
+    const opts = { width: POSTER_W, height: exportHeight, pixelRatio: 1, cacheBust: true };
+    // Safari/iOS costuma falhar na primeira renderização (fontes/imagens ainda
+    // não embutidas), então renderizamos duas vezes e usamos o segundo resultado.
+    await toPng(node, opts);
+    const dataUrl = await toPng(node, opts);
     const suffix = pages.length > 1 ? `-${index + 1}` : "";
-    link.download = `x-post-${tweet.username}-${Date.now()}${suffix}.png`;
-    link.href = dataUrl;
+    const name = `x-post-${tweet.username}-${Date.now()}${suffix}.png`;
+    return new File([dataUrlToBlob(dataUrl)], name, { type: "image/png" });
+  }
+
+  function saveFile(file: File) {
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.download = file.name;
+    link.href = url;
+    link.rel = "noopener";
+    document.body.appendChild(link);
     link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  }
+
+  async function deliver(files: File[]) {
+    if (files.length === 0) return;
+    const nav = navigator as Navigator & {
+      canShare?: (d: ShareData) => boolean;
+      share?: (d: ShareData) => Promise<void>;
+    };
+    // iOS (Safari/Chrome): download via <a download> é bloqueado; usamos o
+    // menu de compartilhamento nativo para salvar em Fotos/Arquivos.
+    if (nav.share && nav.canShare?.({ files })) {
+      try {
+        await nav.share({ files, title: "X Post to Image" });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+      }
+    }
+    if (nav.share && files.length > 1 && nav.canShare?.({ files: [files[0]!] })) {
+      for (const file of files) {
+        try {
+          await nav.share({ files: [file] });
+        } catch (err) {
+          if (err instanceof DOMException && err.name === "AbortError") return;
+          saveFile(file);
+        }
+      }
+      return;
+    }
+    files.forEach(saveFile);
   }
 
   async function handleExport(all: boolean) {
     if (!tweet) return;
     setExporting(true);
     try {
+      const files: File[] = [];
       if (all) {
-        for (let i = 0; i < pages.length; i++) await exportPage(i);
+        for (let i = 0; i < pages.length; i++) {
+          const f = await renderPage(i);
+          if (f) files.push(f);
+        }
       } else {
-        await exportPage(current);
+        const f = await renderPage(current);
+        if (f) files.push(f);
       }
+      await deliver(files);
     } catch {
       setError("Não foi possível gerar o PNG. Tente novamente.");
     } finally {
       setExporting(false);
     }
   }
+
 
   return (
     <main className="min-h-screen bg-background text-foreground">

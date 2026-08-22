@@ -120,10 +120,14 @@ export function Poster({
         justifyContent: "center",
         position: "relative",
         overflow: "hidden",
+        // espaço reservado para a sombra do card não ser cortada na exportação
+        padding: 72,
+        boxSizing: "border-box",
         ...bg.css,
       }}
     >
       <div style={{ width: `${widthPct}%` }}>
+
         <TweetCard
           tweet={tweet}
           text={text}

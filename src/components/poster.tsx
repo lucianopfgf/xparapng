@@ -64,11 +64,19 @@ export const POSTER_W = 1080;
 export const POSTER_H_STORY = 1920;
 export const POSTER_H_FEED = 1350;
 
+/**
+ * Espaço reservado para a sombra do card.
+ * Derivado da maior sombra usada no TweetCard (offset-y 24 + blur 56 = 80),
+ * com folga extra para o desfoque e para o arredondamento das bordas.
+ */
+export const SHADOW_PAD = 96;
+
 export type PosterFormat = "story" | "feed";
 
 export function posterHeight(format: PosterFormat): number {
   return format === "feed" ? POSTER_H_FEED : POSTER_H_STORY;
 }
+
 
 
 export function Poster({
@@ -121,12 +129,14 @@ export function Poster({
         position: "relative",
         overflow: "hidden",
         // espaço reservado para a sombra do card não ser cortada na exportação
-        padding: 72,
+        padding: SHADOW_PAD,
         boxSizing: "border-box",
         ...bg.css,
       }}
     >
-      <div style={{ width: `${widthPct}%` }}>
+      {/* overflow visível: a sombra do card precisa "vazar" para dentro do padding */}
+      <div style={{ width: `${widthPct}%`, overflow: "visible", position: "relative" }}>
+
 
         <TweetCard
           tweet={tweet}

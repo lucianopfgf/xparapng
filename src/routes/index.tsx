@@ -297,15 +297,54 @@ function Home() {
     if (!node || !tweet) return null;
     setPage(index);
     await new Promise((r) => setTimeout(r, 180));
-    const opts = { width: POSTER_W, height: exportHeight, pixelRatio: 1, cacheBust: true };
-    // Safari/iOS costuma falhar na primeira renderização (fontes/imagens ainda
-    // não embutidas), então renderizamos duas vezes e usamos o segundo resultado.
-    await toPng(node, opts);
-    const dataUrl = await toPng(node, opts);
-    const suffix = pages.length > 1 ? `-${index + 1}` : "";
-    const name = `x-post-${tweet.username}-${Date.now()}${suffix}.png`;
-    return new File([dataUrlToBlob(dataUrl)], name, { type: "image/png" });
+
+    // Captura a partir de um clone fora da tela: assim nenhum ancestral
+    // (container com overflow:hidden / transform scale da prévia) recorta
+    // a sombra do card durante a exportação.
+    const host = document.createElement("div");
+    host.style.cssText = [
+      "position:fixed",
+      "top:0",
+      "left:-100000px",
+      "width:" + POSTER_W + "px",
+      "height:" + exportHeight + "px",
+      "overflow:visible",
+      "transform:none",
+      "pointer-events:none",
+      "z-index:-1",
+    ].join(";");
+    const clone = node.cloneNode(true) as HTMLElement;
+    clone.removeAttribute("contenteditable");
+    clone.querySelectorAll("[contenteditable]").forEach((el) => el.removeAttribute("contenteditable"));
+    host.appendChild(clone);
+    document.body.appendChild(host);
+
+    try {
+      // aguarda fontes e imagens do clone antes de capturar
+      if (document.fonts?.ready) await document.fonts.ready;
+      await Promise.all(
+        Array.from(clone.querySelectorAll("img")).map((img) =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise<void>((res) => {
+                img.addEventListener("load", () => res(), { once: true });
+                img.addEventListener("error", () => res(), { once: true });
+              }),
+        ),
+      );
+      const opts = { width: POSTER_W, height: exportHeight, pixelRatio: 1, cacheBust: true };
+      // Safari/iOS costuma falhar na primeira renderização (fontes/imagens ainda
+      // não embutidas), então renderizamos duas vezes e usamos o segundo resultado.
+      await toPng(clone, opts);
+      const dataUrl = await toPng(clone, opts);
+      const suffix = pages.length > 1 ? `-${index + 1}` : "";
+      const name = `x-post-${tweet.username}-${Date.now()}${suffix}.png`;
+      return new File([dataUrlToBlob(dataUrl)], name, { type: "image/png" });
+    } finally {
+      host.remove();
+    }
   }
+
 
   function saveFile(file: File) {
     const url = URL.createObjectURL(file);

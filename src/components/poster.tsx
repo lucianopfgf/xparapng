@@ -129,12 +129,14 @@ export function Poster({
         position: "relative",
         overflow: "hidden",
         // espaço reservado para a sombra do card não ser cortada na exportação
-        padding: 72,
+        padding: SHADOW_PAD,
         boxSizing: "border-box",
         ...bg.css,
       }}
     >
-      <div style={{ width: `${widthPct}%` }}>
+      {/* overflow visível: a sombra do card precisa "vazar" para dentro do padding */}
+      <div style={{ width: `${widthPct}%`, overflow: "visible", position: "relative" }}>
+
 
         <TweetCard
           tweet={tweet}

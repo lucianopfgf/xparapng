@@ -227,7 +227,7 @@ export function TweetCard({
         background: dark ? "#000000" : "#ffffff",
         borderRadius: 24 * scale,
         padding: 44 * scale,
-        boxShadow: "0 40px 90px rgba(0,0,0,0.30), 0 8px 24px rgba(0,0,0,0.16)",
+        boxShadow: "0 24px 56px rgba(0,0,0,0.28), 0 6px 18px rgba(0,0,0,0.14)",
         fontFamily:
           '"Chirp", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
         color: fg,
